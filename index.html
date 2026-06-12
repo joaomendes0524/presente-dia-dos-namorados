@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>💕</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --pink:#ff6b9d;--dark-pink:#c9184a;
+      --light-pink:#ffb3c6;--cream:#fff0f3;
+      --black:#0a0a0a;--pixel:'Press Start 2P',monospace;
+    }
+    body{font-family:var(--pixel);background:var(--black);color:#fff;min-height:100vh;overflow:hidden;user-select:none}
+
+    /* ── SCREENS ── */
+    .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;transition:opacity .6s ease}
+    .screen.hidden{opacity:0;pointer-events:none}
+    .screen.gone{display:none}
+
+    /* ── STARS ── */
+    #stars{position:fixed;inset:0;pointer-events:none;z-index:0}
+    .star{position:absolute;background:#fff;border-radius:50%;animation:twinkle var(--d,3s) infinite ease-in-out}
+    @keyframes twinkle{0%,100%{opacity:.2;transform:scale(1)}50%{opacity:1;transform:scale(1.4)}}
+
+    /* ── INTRO ── */
+    #screen-intro{z-index:10;text-align:center;gap:32px}
+    .pixel-heart{font-size:clamp(48px,15vw,80px);animation:hb 1.2s infinite ease-in-out;display:block}
+    @keyframes hb{0%,100%{transform:scale(1)}14%{transform:scale(1.2)}28%{transform:scale(1)}42%{transform:scale(1.15)}70%{transform:scale(1)}}
+    .intro-sub{font-size:clamp(8px,2.5vw,12px);color:var(--light-pink);line-height:2;max-width:320px}
+    .blink{animation:blink 1s step-end infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+    /* ── BUTTONS ── */
+    .btn{font-family:var(--pixel);font-size:clamp(9px,2.8vw,13px);padding:14px 24px;background:var(--pink);color:#fff;border:none;cursor:pointer;box-shadow:4px 4px 0 var(--dark-pink);transition:transform .08s,box-shadow .08s;text-transform:uppercase;letter-spacing:1px}
+    .btn:active{transform:translate(4px,4px);box-shadow:none}
+    .btn.sec{background:transparent;border:2px solid var(--pink);color:var(--pink);box-shadow:4px 4px 0 var(--dark-pink)}
+
+    /* ── QUESTIONS ── */
+    #screen-questions{z-index:10;gap:0}
+    .qbox{background:#111;border:2px solid var(--pink);padding:28px 24px;max-width:360px;width:100%;text-align:center;position:relative;box-shadow:6px 6px 0 var(--dark-pink)}
+    .qbox h2{font-size:clamp(9px,2.8vw,12px);color:var(--light-pink);line-height:2;margin-bottom:28px;white-space:pre-line}
+    .qctr{font-size:8px;color:#555;position:absolute;top:10px;right:12px}
+    .btnrow{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+    #btn-no{transition:top .1s,left .1s}
+
+    /* ── GAME ── */
+    #screen-game{z-index:10;background:#050510;flex-direction:column;gap:10px}
+    .game-hud{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:420px;font-size:clamp(7px,2vw,10px)}
+    .hud-lives{color:var(--pink);letter-spacing:2px}
+    .hud-enemies{color:#aaf;letter-spacing:1px}
+    .hud-label{color:#555;font-size:7px;margin-bottom:3px}
+    .hud-col{display:flex;flex-direction:column;align-items:center}
+    #game-canvas{display:block;border:2px solid #1a1a2e;touch-action:none;image-rendering:pixelated}
+    .overlay{position:absolute;inset:0;background:rgba(0,0,0,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;z-index:20}
+    .overlay h2{font-size:clamp(9px,2.8vw,14px);color:var(--pink);text-align:center;line-height:2}
+    .overlay.hidden{display:none}
+
+    /* ── DEDICATÓRIA ── */
+    #screen-dedication{z-index:10;background:#070712;text-align:center;gap:0}
+    .ded-wrap{display:flex;flex-direction:column;align-items:center;gap:28px}
+    .ded-for{font-size:clamp(13px,4.5vw,22px);letter-spacing:2px;line-height:1.8;min-height:2em}
+    .ded-heart{font-size:clamp(28px,9vw,44px);transition:opacity 1.2s ease}
+
+    /* ── PRÉ-JOGO ── */
+    #screen-pregame{z-index:10;background:#050510;text-align:center;gap:0}
+    .pregame-wrap{display:flex;flex-direction:column;align-items:center;gap:20px;max-width:320px;animation:fadeUp .5s ease}
+    .pregame-alert{font-size:clamp(9px,3vw,12px);color:#FF3355;animation:blink .6s step-end infinite}
+    .pregame-msg{font-size:clamp(8px,2.5vw,11px);color:var(--light-pink);line-height:2.4}
+    .pregame-box{border:1px solid #2a1a3a;padding:14px 20px;background:rgba(255,107,157,0.05);width:100%}
+    .pregame-obj{font-size:7px;color:var(--pink);margin-bottom:8px;letter-spacing:3px}
+    .pregame-desc{font-size:clamp(7px,2vw,9px);color:#777;line-height:2.2}
+    .pregame-cd{font-size:clamp(44px,14vw,72px);color:var(--pink);line-height:1;animation:hb 1s infinite;min-height:80px;display:flex;align-items:center;justify-content:center}
+
+    /* ── LETTER ── */
+    #screen-letter{z-index:10;color:#333;overflow-y:auto;align-items:center;justify-content:flex-start;padding:36px 20px 80px;gap:0;
+      background:repeating-linear-gradient(-45deg,transparent,transparent 19px,rgba(255,107,157,0.045) 19px,rgba(255,107,157,0.045) 20px),
+      linear-gradient(160deg,#fff0f3 0%,#ffe8ef 100%)}
+    .ltr-wrap{max-width:480px;width:100%;display:flex;flex-direction:column;align-items:center;gap:24px;animation:fadeUp 1s ease forwards}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+    .ltr-header{text-align:center;padding:16px 12px 22px;border-bottom:2px dashed #ffc8d8;width:100%}
+    .ltr-header .hb2{font-size:clamp(36px,12vw,60px);animation:hb 1.4s infinite;display:block;margin-bottom:10px}
+    .ltr-header h1{font-size:clamp(10px,3vw,14px);color:var(--dark-pink);line-height:2}
+    .couple-wrap{display:flex;justify-content:center}
+    #cats-gif{max-width:min(280px,80vw);image-rendering:pixelated;animation:catFloat 3s ease-in-out infinite,catPulse 6s ease-in-out infinite}
+    @keyframes catFloat{0%,100%{transform:translateY(0px)}50%{transform:translateY(-10px)}}
+    @keyframes catPulse{
+      0%,100%{filter:drop-shadow(0 0 0px #ff6b9d)}
+      30%{filter:drop-shadow(0 0 8px #ff6b9d)}
+      60%{filter:drop-shadow(0 0 4px #ff6b9d)}
+    }
+    #couple-canvas{image-rendering:pixelated;display:block}
+    .ltr-divider{width:100%;text-align:center;color:var(--light-pink);letter-spacing:10px;font-size:13px;margin:-4px 0;opacity:.7}
+    .ltr-paper{background:#fff;border:1px solid #f9b8cc;outline:2px solid #ffd6e0;outline-offset:6px;padding:32px 28px 28px;width:100%;box-shadow:0 6px 32px rgba(201,24,74,0.09);position:relative}
+    .ltr-paper::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:50%;height:3px;background:linear-gradient(90deg,transparent,var(--pink),transparent)}
+    .ltr-paper::after{content:'❤';position:absolute;bottom:-15px;left:50%;transform:translateX(-50%);background:#fff;padding:0 10px;color:var(--pink);font-size:22px;line-height:1}
+    .ltr-date{font-size:7px;color:#ccc;text-align:right;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid #f5e0e8}
+    .ltr-text{font-family:'Georgia',serif;font-size:clamp(13px,3.5vw,15px);line-height:2;color:#444;white-space:pre-line}
+    .ltr-sign{font-family:var(--pixel);font-size:clamp(8px,2.5vw,11px);color:var(--dark-pink);text-align:right;margin-top:24px;padding-top:16px;border-top:1px dashed #ffd6e0}
+    .music-player{background:#fff;border:1px solid #f9b8cc;outline:2px solid #ffd6e0;outline-offset:4px;padding:16px 20px;width:100%;display:flex;align-items:center;gap:14px;box-shadow:0 3px 16px rgba(255,107,157,0.12)}
+    .music-icon{width:52px;height:52px;object-fit:cover;border:2px solid var(--pink);flex-shrink:0;box-shadow:2px 2px 0 var(--dark-pink)}
+    .music-icon-emoji{font-size:24px;animation:spin 4s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .music-info{flex:1;min-width:0}
+    .music-title{font-size:8px;color:var(--dark-pink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .music-sub{font-size:7px;color:#bbb;margin-top:4px}
+    .btn-play{font-family:var(--pixel);font-size:10px;background:var(--pink);color:#fff;border:none;padding:8px 12px;cursor:pointer;box-shadow:2px 2px 0 var(--dark-pink);flex-shrink:0}
+    .btn-play:active{transform:translate(2px,2px);box-shadow:none}
+    .float-heart{position:fixed;pointer-events:none;animation:floatUp var(--dur,4s) ease-in forwards;z-index:1;image-rendering:pixelated}
+    @keyframes floatUp{0%{opacity:1;transform:translateY(0) rotate(0deg)}100%{opacity:0;transform:translateY(-100vh) rotate(20deg)}}
+    #screen-letter::-webkit-scrollbar{width:6px}
+    #screen-letter::-webkit-scrollbar-track{background:#fff0f3}
+    #screen-letter::-webkit-scrollbar-thumb{background:var(--light-pink)}
+  </style>
+</head>
+<body>
+
+<div id="stars"></div>
+
+<!-- ══ INTRO ══ -->
+<div class="screen" id="screen-intro">
+  <span class="pixel-heart">❤️</span>
+  <p class="intro-sub">Oi, princesa.<br/>Tenho algumas perguntas<br/>para você...<span class="blink">_</span></p>
+  <button class="btn" onclick="goToQuestions()">▶ Começar</button>
+</div>
+
+<!-- ══ PERGUNTAS ══ -->
+<div class="screen hidden gone" id="screen-questions">
+  <div class="qbox">
+    <span class="qctr" id="q-counter">1 / 3</span>
+    <h2 id="q-text"></h2>
+    <div class="btnrow">
+      <button class="btn" id="btn-yes" onclick="nextQuestion()">Sim 💕</button>
+      <button class="btn sec" id="btn-no" onclick="runAway()">Não</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DEDICATÓRIA ══ -->
+<div class="screen hidden gone" id="screen-dedication">
+  <div class="ded-wrap">
+    <p class="ded-for" id="ded-for"></p>
+    <p class="ded-heart" id="ded-heart" style="opacity:0"></p>
+  </div>
+</div>
+
+<!-- ══ PRÉ-JOGO ══ -->
+<div class="screen hidden gone" id="screen-pregame">
+  <div class="pregame-wrap">
+    <p class="pregame-alert">⚠ ALERTA ⚠</p>
+    <p class="pregame-msg">A Solidão está bloqueando<br/>o caminho até a sua carta...</p>
+    <canvas id="pregame-canvas" width="182" height="52" style="image-rendering:pixelated;display:block"></canvas>
+    <div class="pregame-box">
+      <p class="pregame-obj">— MISSÃO —</p>
+      <p class="pregame-desc">Destrua todos os inimigos<br/>e derrote o Rei da Solidão</p>
+    </div>
+    <p class="pregame-cd" id="pregame-cd">3</p>
+  </div>
+</div>
+
+<!-- ══ JOGO ══ -->
+<div class="screen hidden gone" id="screen-game">
+  <div class="game-hud">
+    <div class="hud-col">
+      <div class="hud-label">VIDAS</div>
+      <div class="hud-lives" id="hud-lives">♥♥♥</div>
+    </div>
+    <div class="hud-col" style="color:var(--light-pink);font-size:clamp(8px,2.5vw,11px)">
+      DERROTE A SOLIDÃO!
+    </div>
+    <div class="hud-col">
+      <div class="hud-label">INIMIGOS</div>
+      <div class="hud-enemies" id="hud-enemies">15</div>
+    </div>
+  </div>
+  <canvas id="game-canvas"></canvas>
+  <div class="overlay hidden" id="overlay-win">
+    <h2>Conseguimos vencer a solidão!<br/>O amor triunfou!<br/>💕</h2>
+    <button class="btn" onclick="showDedication()">Abrir carta ▶</button>
+  </div>
+  <div class="overlay hidden" id="overlay-lose">
+    <h2>Você perdeu...<br/>mas tente de novo!</h2>
+    <button class="btn" onclick="restartGame()">▶ Tentar novamente</button>
+  </div>
+</div>
+
+<!-- ══ CARTA ══ -->
+<div class="screen hidden gone" id="screen-letter">
+  <div class="ltr-wrap">
+    <div class="ltr-header">
+      <span class="hb2">💌</span>
+      <h1>Feliz Dia<br/>dos Namorados, Ma Cherie!</h1>
+    </div>
+
+    <!-- GIF DOS GATOS -->
+    <div class="ltr-divider">✦ ✦ ✦</div>
+    <div class="couple-wrap">
+      <img id="cats-gif" src="gatos.png" alt="Mia e Fumacinha" />
+    </div>
+    <div class="ltr-divider">✦ ✦ ✦</div>
+
+    <!-- PLAYER -->
+    <div class="music-player">
+      <img class="music-icon" src="capa.jpg" alt="Shazna"/>
+      <div class="music-info">
+        <div class="music-title" id="music-title">Melty Love</div>
+        <div class="music-sub" id="music-artist">Shazna</div>
+      </div>
+      <button class="btn-play" id="btn-play-music" onclick="toggleMusic()">⏸</button>
+    </div>
+    <audio id="audio" loop><source src="Melty Love.mp3" type="audio/mpeg"/></audio>
+
+    <!-- CARTA -->
+    <div class="ltr-paper">
+      <div class="ltr-date" id="ltr-date"></div>
+      <div class="ltr-text" id="ltr-text">
+Gatinha,
+
+Hoje seria apenas um dia normal, porém com você na minha vida, ele se torna totalmente diferente: Dia dos namorados!
+
+Não sei nem descrever o quanto eu te amo. Cada momento que temos juntos é especial e eu me lembro de todos eles com muito carinho todos os dias!
+
+Só tenho a te agradecer, meu amor, por você ser tão esforçada e não desistir de mim mesmo com eu sendo complicado de se entender. Quero retribuir todo o amor que você me dá, um pouquinho a cada dia.
+
+Desde que te vi na escola, olhei para você e já soube que era o seu rosto que eu queria ver todo dia que acordasse de manhã cedo.
+
+Amo cada sarda no seu rosto, cada pinta espalhada pelo seu corpo, cada fio de cabelo seu. Tenho orgulho de te ter como namorada (e tenho muita sorte também 😘)
+
+Eu te amo tanto que não consigo nem expressar em só palavras, mas vou continuar tentando todos os dias!
+
+Você é o amor da minha vida, Yasmim.
+
+
+(espero que esse site te arranque alguns sorrisos, pq me deu muito trabalho)
+      </div>
+      <div class="ltr-sign" id="ltr-sign">
+        Com amor,<br/>
+        Seu Jovi. ❤️
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════════ STARS ════════ */
+(function(){
+  const c=document.getElementById('stars');
+  for(let i=0;i<80;i++){
+    const s=document.createElement('div');s.className='star';
+    const sz=Math.random()*3+1;
+    s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${(Math.random()*4+2).toFixed(1)}s;animation-delay:${(Math.random()*4).toFixed(1)}s`;
+    c.appendChild(s);
+  }
+})();
+
+/* ════════ SCREENS ════════ */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>{
+    if(s.id===id)return;
+    s.classList.add('hidden');
+    setTimeout(()=>s.classList.add('gone'),600);
+  });
+  const n=document.getElementById(id);
+  n.classList.remove('gone');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>n.classList.remove('hidden')));
+}
+
+/* ════════ QUESTIONS ════════ */
+
+const questions=[
+  "Você é a pessoa\nmais especial\nda minha vida?",
+  "Você é a \nmulher mais linda desse mundo?\n",
+  "Você quer ser\nminha gatinha\npara sempre?",
+];
+let qIdx=0;
+function goToQuestions(){showScreen('screen-questions');loadQ(0);}
+function loadQ(i){
+  document.getElementById('q-text').textContent=questions[i];
+  document.getElementById('q-counter').textContent=`${i+1} / ${questions.length}`;
+  const b=document.getElementById('btn-no');
+  b.style.position='';b.style.top='';b.style.left='';
+}
+function nextQuestion(){
+  qIdx++;
+  if(qIdx>=questions.length) startPreGame();
+  else loadQ(qIdx);
+}
+
+function startPreGame(){
+  showScreen('screen-pregame');
+  // Desenha mini-inimigos + player no canvas da tela
+  setTimeout(()=>{
+    const c=document.getElementById('pregame-canvas');
+    if(!c)return;
+    const ctx=c.getContext('2d');
+    const sc=2;
+    ctx.fillStyle='#050510'; ctx.fillRect(0,0,c.width,c.height);
+    for(let i=0;i<5;i++)
+      drawSprite(ctx,ENEMY_SPR,i%2===0?ENEMY_COLS_A:ENEMY_COLS_B,4+i*36,4,sc);
+    drawSprite(ctx,PLAYER_SPR,PLAYER_COLS,c.width/2-11,c.height-8*sc-2,sc);
+  },400);
+  // Contagem regressiva
+  let n=3;
+  const el=document.getElementById('pregame-cd');
+  el.textContent=n;
+  const iv=setInterval(()=>{
+    n--;
+    if(n<=0){
+      clearInterval(iv);
+      el.textContent='♥';
+      setTimeout(()=>{showScreen('screen-game');setTimeout(initGame,700);},500);
+    } else {
+      el.textContent=n;
+    }
+  },1000);
+}
+function runAway(){
+  const b=document.getElementById('btn-no'),m=20;
+  b.style.position='fixed';
+  b.style.left=Math.random()*(innerWidth-b.offsetWidth-m*2)+m+'px';
+  b.style.top=Math.random()*(innerHeight-b.offsetHeight-m*2)+m+'px';
+}
+
+/* ════════ PIXEL ART SPRITES ════════ */
+
+// Inimigo (8×7) — criaturinha da solidão
+// 1=corpo, 2=olho branco
+const ENEMY_SPR=[
+  [0,0,1,0,0,1,0,0],
+  [0,1,1,1,1,1,1,0],
+  [1,1,2,1,1,2,1,1],
+  [1,1,1,0,0,1,1,1],
+  [0,1,1,1,1,1,1,0],
+  [1,0,1,0,0,1,0,1],
+  [0,0,1,0,0,1,0,0],
+];
+const ENEMY_COLS_A=['#1A3A6B','#33FFCC']; // azul escuro + olhos ciano
+const ENEMY_COLS_B=['#330055','#FF5533']; // roxo escuro + olhos laranja
+
+// Nave coração do player (11×8)
+// 1=corpo, 2=brilho
+const PLAYER_SPR=[
+  [0,0,1,1,0,0,0,1,1,0,0],
+  [0,1,1,1,1,0,1,1,1,1,0],
+  [1,1,1,1,1,1,1,1,1,1,1],
+  [2,1,1,1,1,1,1,1,1,1,2],
+  [0,1,1,1,1,1,1,1,1,1,0],
+  [0,0,1,1,1,1,1,1,1,0,0],
+  [0,0,0,1,1,1,1,1,0,0,0],
+  [0,0,0,0,1,1,1,0,0,0,0],
+];
+const PLAYER_COLS=['#FF4081','#FF80AB'];
+
+// Projétil do player — coraçãozinho (5×4)
+const PBULLET_SPR=[
+  [0,1,0,1,0],
+  [1,1,1,1,1],
+  [0,1,1,1,0],
+  [0,0,1,0,0],
+];
+const PBULLET_COLS=['#FF80AB'];
+
+// Projétil inimigo — coração partido (5×4)
+const EBULLET_SPR=[
+  [0,1,0,1,0],
+  [1,1,0,1,1],
+  [0,1,1,1,0],
+  [0,0,1,0,0],
+];
+const EBULLET_COLS=['#6622AA','#CC66FF'];
+
+// Explosão (pequena, 5×5)
+const EXPLO_SPR=[
+  [0,1,0,1,0],
+  [1,0,1,0,1],
+  [0,1,2,1,0],
+  [1,0,1,0,1],
+  [0,1,0,1,0],
+];
+const EXPLO_COLS=['#FF80AB','#FFFF80'];
+
+function drawSprite(ctx,spr,colors,ox,oy,sc){
+  spr.forEach((row,ry)=>row.forEach((v,rx)=>{
+    if(!v)return;
+    ctx.fillStyle=colors[v-1]||colors[0];
+    ctx.fillRect(ox+rx*sc,oy+ry*sc,sc,sc);
+  }));
+}
+
+/* ════════ SPACE INVADERS GAME ════════ */
+const GCOLS=5, GROWS=3;
+let gscale,gcanvas,gctx;
+let enemies,player,pbullets,ebullets,explosions;
+let eDir,eBaseX,eBaseY,eCellW,eCellH;
+let autoFireT,eFireT,lives;
+let gState='idle'; // 'playing'|'boss_intro'|'boss'|'won'|'dead'
+let gAnimId;
+let boss=null, bossIntroTimer=0;
+let heartBreak=null;
+let heartRainParticles=[], heartRainTimer=0;
+
+// Metade esquerda do coração partido (4×6)
+const HEART_L=[
+  [0,1,1,0],
+  [1,1,1,1],
+  [1,2,1,1],
+  [0,1,1,1],
+  [0,0,1,1],
+  [0,0,0,1],
+];
+// Metade direita (4×6)
+const HEART_R=[
+  [0,1,1,0],
+  [1,1,1,1],
+  [1,1,2,1],
+  [1,1,1,0],
+  [1,1,0,0],
+  [1,0,0,0],
+];
+
+// Boss "Rei da Solidao" — 18x14
+// 1=corpo roxo  2=coroa dourada  3=olhos vermelhos  4=detalhe lilis
+const BOSS_SPR=[
+  [0,0,0,2,0,0,2,0,0,0,0,2,0,0,2,0,0,0], // pontas da coroa
+  [0,0,2,2,2,2,2,2,0,0,2,2,2,2,2,2,0,0], // corpo da coroa
+  [0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0], // base da coroa
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1], // cabeca topo
+  [1,1,3,3,3,1,1,1,1,1,1,1,1,3,3,3,1,1], // olhos grandes (3x3)
+  [1,1,3,4,3,1,1,1,1,1,1,1,1,3,4,3,1,1], // olhos + pupila clara
+  [1,1,3,3,3,1,1,1,1,1,1,1,1,3,3,3,1,1], // olhos parte inferior
+  [1,1,1,1,1,1,4,4,4,4,4,4,1,1,1,1,1,1], // boca carrancuda
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1], // queixo
+  [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0], // corpo (cristais aqui)
+  [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0], // corpo
+  [0,0,1,1,4,1,1,1,1,1,1,1,1,4,1,1,0,0], // detalhes corpo
+  [0,0,0,1,1,1,0,1,1,0,0,1,1,0,1,1,0,0], // pernas
+  [0,0,0,1,0,0,0,1,1,0,0,1,1,0,0,1,0,0], // pes
+  ];
+const BOSS_COLS=['#5B0EA6','#FFD700','#FF3333','#CC44CC'];
+
+// Ponto fraco — cristal vivo (5×5)
+const WP_ALIVE=[
+  [0,0,1,0,0],
+  [0,1,2,1,0],
+  [1,2,2,2,1],
+  [0,1,2,1,0],
+  [0,0,1,0,0],
+];
+const WP_ALIVE_COLS=['#00DDFF','#FFFFFF'];
+
+// Ponto fraco — destruído (5×5)
+const WP_DEAD=[
+  [1,0,0,0,1],
+  [0,1,0,1,0],
+  [0,0,1,0,0],
+  [0,1,0,1,0],
+  [1,0,0,0,1],
+];
+const WP_DEAD_COLS=['#444444'];
+
+function initGame(){
+  gcanvas=document.getElementById('game-canvas');
+  gctx=gcanvas.getContext('2d');
+  const cw=Math.min(innerWidth-32,420);
+  gcanvas.width=cw;
+  gcanvas.height=Math.min(innerHeight*0.56,430);
+
+  gscale=Math.max(3,Math.floor(cw/80));
+  eCellW=(8+5)*gscale;
+  eCellH=(7+5)*gscale;
+
+  const gridW=GCOLS*eCellW-5*gscale;
+  eBaseX=(cw-gridW)/2;
+  eBaseY=gscale*3;
+
+  enemies=[];
+  for(let r=0;r<GROWS;r++)
+    for(let c=0;c<GCOLS;c++)
+      enemies.push({r,c,alive:true,phase:Math.random()*Math.PI*2});
+
+  const pw=11*gscale, ph=8*gscale;
+  player={x:cw/2-pw/2, y:gcanvas.height-ph-8, w:pw, h:ph};
+  pbullets=[]; ebullets=[]; explosions=[];
+  eDir=1; lives=3; autoFireT=0; eFireT=0;
+  boss=null; bossIntroTimer=0; heartBreak=null; heartRainParticles=[]; heartRainTimer=0;
+  gState='playing';
+
+  document.getElementById('overlay-win').classList.add('hidden');
+  document.getElementById('overlay-lose').classList.add('hidden');
+  updateHUD();
+
+  // Controls
+  function mvPlayer(cx){
+    const r=gcanvas.getBoundingClientRect();
+    player.x=Math.max(0,Math.min(gcanvas.width-player.w,cx-r.left-player.w/2));
+  }
+  gcanvas.onmousemove=e=>mvPlayer(e.clientX);
+  gcanvas.ontouchmove=null;
+  gcanvas.addEventListener('touchmove',e=>{e.preventDefault();mvPlayer(e.touches[0].clientX);},{passive:false});
+  gcanvas.addEventListener('touchstart',e=>{e.preventDefault();mvPlayer(e.touches[0].clientX);firePBullet();},{passive:false,once:false});
+
+  cancelAnimationFrame(gAnimId);
+  gAnimId=requestAnimationFrame(gameLoop);
+}
+
+function restartGame(){initGame();}
+
+function spawnBoss(){
+  const cw=gcanvas.width;
+  const bw=18*gscale, bh=14*gscale;
+  boss={
+    x:cw/2-bw/2, y:-bh,
+    w:bw, h:bh,
+    targetY:20,
+    dir:1, speed:0.9,
+    fireTimer:60,
+    entering:true,
+    hitFlash:0,
+    // dc/dr = coluna/linha do sprite (offset em pixels × gscale)
+    wps:[
+      {dc:1,  dr:9, alive:true},
+      {dc:7,  dr:9, alive:true},
+      {dc:13, dr:9, alive:true},
+    ],
+  };
+}
+
+function gameLoop(){
+  gAnimId=requestAnimationFrame(gameLoop);
+  const cw=gcanvas.width, ch=gcanvas.height;
+
+  gctx.fillStyle='#070710';
+  gctx.fillRect(0,0,cw,ch);
+  gctx.strokeStyle='#0e0e22';gctx.lineWidth=1;
+  for(let x=0;x<cw;x+=16){gctx.beginPath();gctx.moveTo(x,0);gctx.lineTo(x,ch);gctx.stroke();}
+  for(let y=0;y<ch;y+=16){gctx.beginPath();gctx.moveTo(0,y);gctx.lineTo(cw,y);gctx.stroke();}
+
+  if(gState==='playing')       updateSpaceGame();
+  else if(gState==='boss_intro') updateBossIntro();
+  else if(gState==='boss')       updateBossPhase();
+
+  // Inimigos normais (só existem em playing / boss_intro)
+  enemies.forEach(e=>{
+    if(!e.alive)return;
+    const ex=eBaseX+e.c*eCellW, ey=eBaseY+e.r*eCellH;
+    drawSprite(gctx,ENEMY_SPR,e.r===0?ENEMY_COLS_B:ENEMY_COLS_A,ex,ey,gscale);
+  });
+
+  // Boss
+  if(boss) drawBoss();
+
+  drawSprite(gctx,PLAYER_SPR,PLAYER_COLS,player.x,player.y,gscale);
+  pbullets.forEach(b=>drawSprite(gctx,PBULLET_SPR,PBULLET_COLS,b.x,b.y,gscale));
+  ebullets.forEach(b=>drawSprite(gctx,EBULLET_SPR,b.col||EBULLET_COLS,b.x,b.y,gscale));
+  explosions.forEach(e=>drawSprite(gctx,EXPLO_SPR,EXPLO_COLS,e.x,e.y,gscale));
+
+  // Texto de intro do boss
+  if(gState==='boss_intro'){
+    const prog=(120-bossIntroTimer)/120;
+    const alpha=Math.max(0,Math.sin(prog*Math.PI));
+    gctx.save();
+    gctx.globalAlpha=alpha;
+    gctx.fillStyle='#FF0055';
+    gctx.shadowColor='#FF0055';
+    gctx.shadowBlur=16;
+    gctx.font=`bold ${Math.floor(gscale*4.5)}px 'Press Start 2P',monospace`;
+    gctx.textAlign='center';
+    gctx.fillText('⚠ CHEFE! ⚠',cw/2,ch*0.65);
+    gctx.restore();
+  }
+
+  gctx.strokeStyle='#FF4081';gctx.lineWidth=1;
+  gctx.beginPath();gctx.moveTo(0,player.y-4);gctx.lineTo(cw,player.y-4);gctx.stroke();
+
+  // Chuva de coraçõeS
+  if(gState==='heart_rain'){
+    if(Math.random()<0.35){
+      const cols=[['#FF4081','#FF80AB'],['#E91E63','#F06292'],['#FF80AB','#FFFFFF'],['#FF4081','#FFFF99']];
+      heartRainParticles.push({
+        x:Math.random()*cw,
+        y:ch+8,
+        vx:(Math.random()-0.5)*2,
+        vy:-(2.5+Math.random()*3),
+        sc:Math.max(2,Math.floor(gscale*(0.6+Math.random()*0.8))),
+        col:cols[Math.floor(Math.random()*cols.length)],
+        a:1,
+      });
+    }
+    heartRainParticles.forEach(h=>{h.x+=h.vx;h.y+=h.vy;if(h.y<-20)h.a=0;});
+    heartRainParticles=heartRainParticles.filter(h=>h.a>0);
+    heartRainParticles.forEach(h=>{
+      gctx.save();gctx.globalAlpha=h.a;
+      drawSprite(gctx,HEART_SPR,h.col,h.x,h.y,h.sc);
+      gctx.restore();
+    });
+    // Texto central
+    const pulse=0.85+0.15*Math.sin(heartRainTimer*0.15);
+    gctx.save();
+    gctx.globalAlpha=pulse;
+    gctx.fillStyle='#FF80AB';
+    gctx.font=`bold ${Math.floor(gscale*3)}px 'Press Start 2P',monospace`;
+    gctx.textAlign='center';
+    gctx.fillText('O NOSSO AMOR VENCEU!',cw/2,ch/2);
+    gctx.restore();
+    heartRainTimer--;
+    if(heartRainTimer<=0){
+      heartRainParticles=[];
+      gState='won';
+      document.getElementById('overlay-win').classList.remove('hidden');
+    }
+  }
+
+  // Animação coração partido
+  if(heartBreak){
+    const p=heartBreak.t/heartBreak.maxT;
+    const sc=gscale*2;
+    const spread=p*p*80;
+    const rise=p*p*50;
+    gctx.save();
+    gctx.globalAlpha=Math.max(0,1-p*1.4);
+    drawSprite(gctx,HEART_L,['#FF4081','#FF80AB'],heartBreak.cx-4*sc-spread,heartBreak.cy-rise,sc);
+    drawSprite(gctx,HEART_R,['#FF4081','#FF80AB'],heartBreak.cx+spread,heartBreak.cy-rise,sc);
+    gctx.restore();
+    heartBreak.t++;
+    if(heartBreak.t>=heartBreak.maxT)heartBreak=null;
+  }
+}
+
+function drawBoss(){
+  if(boss.hitFlash>0&&boss.hitFlash%2===0){
+    gctx.save();gctx.globalAlpha=0.4;
+  }
+  drawSprite(gctx,BOSS_SPR,BOSS_COLS,boss.x,boss.y,gscale);
+  if(boss.hitFlash>0&&boss.hitFlash%2===0) gctx.restore();
+
+  boss.wps.forEach(wp=>{
+    const wx=boss.x+wp.dc*gscale;
+    const wy=boss.y+wp.dr*gscale;
+    drawSprite(gctx,wp.alive?WP_ALIVE:WP_DEAD,wp.alive?WP_ALIVE_COLS:WP_DEAD_COLS,wx,wy,gscale);
+  });
+}
+
+function updateBossIntro(){
+  bossIntroTimer--;
+  if(bossIntroTimer<=0){gState='boss';updateHUD();}
+
+  // Boss desce devagar durante a intro
+  if(boss&&boss.entering){boss.y+=1.5;if(boss.y>=boss.targetY)boss.entering=false;}
+
+  // Player pode atirar durante a intro
+  autoFireT++;
+  if(autoFireT>=42){autoFireT=0;firePBullet();}
+  pbullets.forEach(b=>b.y-=8);
+  pbullets=pbullets.filter(b=>b.y+4*gscale>0);
+
+  explosions.forEach(e=>e.t++);
+  explosions=explosions.filter(e=>e.t<12);
+}
+
+function updateBossPhase(){
+  if(boss.entering){boss.y+=2;if(boss.y>=boss.targetY)boss.entering=false;}
+
+  const aliveWPs=boss.wps.filter(w=>w.alive).length;
+  const bSpd=boss.speed*(1+(3-aliveWPs)*0.4);
+  boss.x+=boss.dir*bSpd;
+  if(boss.x<=0){boss.dir=1;boss.x=0;}
+  if(boss.x+boss.w>=gcanvas.width){boss.dir=-1;boss.x=gcanvas.width-boss.w;}
+
+  if(boss.hitFlash>0)boss.hitFlash--;
+
+  // Boss atira (tiro triplo)
+  boss.fireTimer++;
+  const fireRate=Math.max(50,90-aliveWPs*12);
+  if(boss.fireTimer>=fireRate){
+    boss.fireTimer=0;
+    const bx=boss.x+boss.w/2, by=boss.y+boss.h;
+    const bc=['#FF2244','#FF8866'];
+    ebullets.push({x:bx,  y:by, spd:3,   vx:0,    col:bc});
+    ebullets.push({x:bx,  y:by, spd:2.5, vx:-1.5, col:bc});
+    ebullets.push({x:bx,  y:by, spd:2.5, vx: 1.5, col:bc});
+  }
+
+  autoFireT++;
+  if(autoFireT>=42){autoFireT=0;firePBullet();}
+
+  // Balas do player → colisão com pontos fracos
+  pbullets.forEach(b=>b.y-=8);
+  pbullets=pbullets.filter(b=>{
+    if(b.y+4*gscale<0)return false;
+    let hit=false;
+    boss.wps.forEach(wp=>{
+      if(!wp.alive||hit)return;
+      const wx=boss.x+wp.dc*gscale, wy=boss.y+wp.dr*gscale;
+      if(b.x<wx+5*gscale&&b.x+5*gscale>wx&&b.y<wy+5*gscale&&b.y+4*gscale>wy){
+        wp.alive=false; hit=true;
+        boss.hitFlash=8;
+        explosions.push({x:wx,y:wy,t:0});
+        updateHUD();
+        if(boss.wps.filter(w=>w.alive).length===0){
+          gState='heart_rain';
+          heartRainParticles=[];
+          heartRainTimer=160;
+        }
+      }
+    });
+    return !hit;
+  });
+
+  // Balas do boss (com vx)
+  ebullets.forEach(b=>{b.y+=b.spd; b.x+=b.vx||0;});
+  ebullets=ebullets.filter(b=>{
+    if(b.y>gcanvas.height||b.x<-10||b.x>gcanvas.width+10)return false;
+    if(b.x>player.x&&b.x<player.x+player.w&&b.y>player.y&&b.y<player.y+player.h){
+      loseLife();return false;
+    }
+    return true;
+  });
+
+  explosions.forEach(e=>e.t++);
+  explosions=explosions.filter(e=>e.t<12);
+}
+
+function updateSpaceGame(){
+  const aliveE=enemies.filter(e=>e.alive);
+  if(aliveE.length===0){
+    pbullets=[];ebullets=[];
+    gState='boss_intro';
+    bossIntroTimer=120;
+    spawnBoss();
+    updateHUD();
+    return;
+  }
+
+  const spd=0.6+0.08*(GCOLS*GROWS-aliveE.length);
+  eBaseX+=eDir*spd;
+
+  let minC=Infinity,maxC=-Infinity;
+  aliveE.forEach(e=>{minC=Math.min(minC,e.c);maxC=Math.max(maxC,e.c);});
+  const leftX=eBaseX+minC*eCellW;
+  const rightX=eBaseX+maxC*eCellW+8*gscale;
+  if(rightX>=gcanvas.width-2&&eDir===1){eDir=-1;eBaseY+=eCellH*0.35;}
+  else if(leftX<=2&&eDir===-1){eDir=1;eBaseY+=eCellH*0.35;}
+
+  let reached=false;
+  aliveE.forEach(e=>{if(eBaseY+e.r*eCellH+7*gscale>=player.y&&!reached){reached=true;}});
+  if(reached){loseLife();return;}
+
+  autoFireT++;
+  if(autoFireT>=42){autoFireT=0;firePBullet();}
+
+  eFireT++;
+  if(eFireT>=100+Math.floor(Math.random()*80)){
+    eFireT=0;
+    const s=aliveE[Math.floor(Math.random()*aliveE.length)];
+    ebullets.push({
+      x:eBaseX+s.c*eCellW+4*gscale-gscale,
+      y:eBaseY+s.r*eCellH+7*gscale,
+      spd:3, vx:0,
+    });
+  }
+
+  pbullets.forEach(b=>b.y-=8);
+  pbullets=pbullets.filter(b=>{
+    if(b.y+4*gscale<0)return false;
+    let hit=false;
+    enemies.forEach(e=>{
+      if(!e.alive||hit)return;
+      const ex=eBaseX+e.c*eCellW,ey=eBaseY+e.r*eCellH;
+      if(b.x<ex+8*gscale&&b.x+5*gscale>ex&&b.y<ey+7*gscale&&b.y+4*gscale>ey){
+        e.alive=false;hit=true;
+        explosions.push({x:ex,y:ey,t:0});
+        updateHUD();
+      }
+    });
+    return !hit;
+  });
+
+  ebullets.forEach(b=>b.y+=b.spd);
+  ebullets=ebullets.filter(b=>{
+    if(b.y>gcanvas.height)return false;
+    if(b.x>player.x&&b.x<player.x+player.w&&b.y>player.y&&b.y<player.y+player.h){
+      loseLife();return false;
+    }
+    return true;
+  });
+
+  explosions.forEach(e=>e.t++);
+  explosions=explosions.filter(e=>e.t<12);
+}
+
+function firePBullet(){
+  if(gState!=='playing'&&gState!=='boss'&&gState!=='boss_intro')return;
+  pbullets.push({x:player.x+player.w/2-2*gscale,y:player.y-4*gscale});
+}
+
+function loseLife(){
+  lives=Math.max(0,lives-1);
+  updateHUD();
+  pbullets=[];ebullets=[];
+  if(lives>0) heartBreak={t:0,maxT:55,cx:player.x+player.w/2,cy:player.y};
+  if(gState==='boss'||gState==='boss_intro'){
+    if(boss){boss.y=-boss.h;boss.entering=true;}
+  } else {
+    eBaseY=gscale*3;
+    eBaseX=(gcanvas.width-GCOLS*eCellW)/2+2*gscale;
+    eDir=1;
+  }
+  if(lives<=0){
+    gState='dead';
+    setTimeout(()=>document.getElementById('overlay-lose').classList.remove('hidden'),600);
+  }
+}
+
+function updateHUD(){
+  document.getElementById('hud-lives').textContent='♥'.repeat(lives)+'♡'.repeat(Math.max(0,3-lives));
+  if(gState==='boss'||gState==='boss_intro'){
+    const n=boss?boss.wps.filter(w=>w.alive).length:3;
+    document.getElementById('hud-enemies').textContent='♦'.repeat(n)+'◇'.repeat(3-n);
+  } else {
+    const alive=enemies.filter(e=>e.alive).length;
+    document.getElementById('hud-enemies').textContent=String(alive).padStart(2,'0');
+  }
+}
+
+/* ════════ PIXEL ART HELPERS (usado nos corações flutuantes) ════════ */
+const _=null;
+
+
+// Coraçãozinho pixel art (7×6) para os corações flutuantes
+const HEART_SPR=[
+  [0,1,1,0,1,1,0],
+  [1,1,1,1,1,1,1],
+  [1,2,1,1,1,2,1],
+  [0,1,1,1,1,1,0],
+  [0,0,1,1,1,0,0],
+  [0,0,0,1,0,0,0],
+];
+const HEART_COLS=['#FF4081','#FF80AB'];
+
+
+/* ════════ LETTER PAGE ════════ */
+function showDedication(){
+  cancelAnimationFrame(gAnimId);
+  showScreen('screen-dedication');
+  const el=document.getElementById('ded-for');
+  const heart=document.getElementById('ded-heart');
+  el.innerHTML=''; heart.style.opacity='0'; heart.textContent='💌';
+
+  // Sequência: [{texto, delay por char, cor}]
+  const chunks=[
+    {text:'Para ',  delay:75,  col:'#cccccc'},
+    {text:'Yasmim', delay:150, col:'var(--pink)'},
+  ];
+  let t=0;
+  chunks.forEach(chunk=>{
+    [...chunk.text].forEach(ch=>{
+      setTimeout(()=>{
+        const s=document.createElement('span');
+        s.style.color=chunk.col; s.textContent=ch;
+        el.appendChild(s);
+      }, t);
+      t+=chunk.delay;
+    });
+  });
+  // 💌 aparece + música começa
+  setTimeout(()=>{
+    heart.style.opacity='1';
+    const aud=document.getElementById('audio');
+    aud.currentTime=20;
+    aud.play().catch(()=>{});
+  }, t+500);
+  // Abre a carta
+  setTimeout(goToLetter, t+2600);
+}
+
+function goToLetter(){
+  cancelAnimationFrame(gAnimId);
+  showScreen('screen-letter');
+  document.getElementById('stars').style.display='none';
+  const d=new Date();
+  document.getElementById('ltr-date').textContent=
+    d.toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+  setInterval(spawnFloatHeart,1400);
+
+  // Efeito de digitação na carta
+  const el=document.getElementById('ltr-text');
+  const fullText=el.textContent;
+  el.textContent='';
+  let i=0;
+  function typeNext(){
+    if(i>=fullText.length)return;
+    const ch=fullText[i];
+    el.textContent+=ch;
+    i++;
+    const delay=/[.!?…]/.test(ch)?200:/[,;:\n]/.test(ch)?90:28;
+    setTimeout(typeNext,delay);
+  }
+  setTimeout(typeNext,900);
+}
+
+function spawnFloatHeart(){
+  const cv=document.createElement('canvas');
+  cv.className='float-heart';
+  const P=3;cv.width=7*P;cv.height=6*P;
+  const c=cv.getContext('2d');
+  const cols=[['#FF4081','#FF80AB'],['#E91E63','#F06292'],['#C2185B','#FF4081']];
+  const col=cols[Math.floor(Math.random()*cols.length)];
+  drawSprite(c,HEART_SPR,col,0,0,P);
+  cv.style.left=Math.random()*90+5+'vw';
+  cv.style.bottom='-30px';
+  cv.style.setProperty('--dur',(Math.random()*3+3).toFixed(1)+'s');
+  document.body.appendChild(cv);
+  setTimeout(()=>cv.remove(),6000);
+}
+
+function toggleMusic(){
+  const a=document.getElementById('audio'),b=document.getElementById('btn-play-music');
+  if(a.paused){a.play();b.textContent='⏸';}else{a.pause();b.textContent='▶';}
+}
+</script>
+</body>
+</html>
